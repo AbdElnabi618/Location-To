@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MapActivity">
+
+    <RelativeLayout
+        android:id="@+id/rl_tv"
+        android:layout_margin="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/tv_yourLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/yourLocation"
+            android:layout_marginStart="32dp"
+            android:textColor="#fff"/>
+
+        <TextView
+            android:id="@+id/tv_nextLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_yourLocation"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="8dp"
+            android:text="@string/nextLocation"
+            android:textColor="#fff"/>
+
+    </RelativeLayout>
+
+     <fragment
+         android:id="@+id/fl_map"
+         android:name="com.google.android.gms.maps.SupportMapFragment"
+         android:layout_below="@id/rl_tv"
+         android:layout_above="@id/tv_distance"
+         android:layout_width="match_parent"
+         android:layout_height="wrap_content"
+         android:layout_marginStart="16dp"
+         android:layout_marginEnd="16dp"/>
+
+    <TextView
+        android:id="@+id/tv_distance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="@string/distance"
+        android:layout_above="@id/btn_getDistance"
+        android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginStart="32dp"
+        android:gravity="center"
+        android:padding="4dp"
+        android:textColor="#fff"/>
+
+    <Button
+        android:id="@+id/btn_getDistance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/getDistance"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="8dp"/>
+
+</RelativeLayout>

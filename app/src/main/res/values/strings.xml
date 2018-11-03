@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">LocationTo</string>
+
+    <string name="introText">To open map click the button in blow</string>
+    <string name="OpenMap">Open Map</string>
+    <string name="yourLocation">Your Location :</string>
+    <string name="nextLocation">Going To :</string>
+    <string name="distance">Total Distance :</string>
+    <string name="getDistance">Get Direction</string>
+    <string name="title_activity_maps">Map</string>
+
+    <string name="server_key">AIzaSyDSEuI96IbPxau3anEWkuGc8d8faBav5vw</string>
+</resources>
