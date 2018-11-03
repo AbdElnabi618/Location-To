@@ -64,7 +64,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     // declaration variable
     private GoogleMap mMap;
     private GoogleApiClient apiClient;
-    private boolean flag;
+    private boolean flag,btnClickFlag;
     LocationRequest locationRequest;
     private SupportMapFragment mapFragment;
 
@@ -78,14 +78,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         setContentView(R.layout.activity_map);
         // flag to zoom in my location when activity start
         flag = true;
+        btnClickFlag =false;
 
         tv_distance = findViewById(R.id.tv_distance);
         tv_goalPoint = findViewById(R.id.tv_nextLocation);
         tv_yourLocation = findViewById(R.id.tv_yourLocation);
-//        retrofit = new Retrofit.Builder().baseUrl(IApi.baseURL)
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//        api= retrofit.create(IApi.class);
         getDistance = findViewById(R.id.btn_getDistance);
 
         // initialization end point
@@ -114,13 +111,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
             // create google api client
             CreateGoogleApiClient();
         }
-
+        // handle on click button
         getDistance.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     CalculationByDistance(startPoint, endPoint);
-                    GetDirection(startPoint, endPoint);
+                    DrawDirection(startPoint,endPoint);
+                    btnClickFlag=true;
                 }catch (Exception e){
                     Toast.makeText(MapActivity.this, "error 18 : try open GPS or Accept location permissions \n " +
                             "if not work connect us" , Toast.LENGTH_SHORT).show();
@@ -169,10 +167,20 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     @Override
                     public void onDirectionFailure(Throwable t) {
                         Log.e("direction filed", t.getMessage());
-                        Toast.makeText(MapActivity.this, "Some thing went wrong please connect us to solve",
+                        Toast.makeText(MapActivity.this, "Some thing went wrong please connect us " +
+                                        "to solve or try open the internet",
                                 Toast.LENGTH_LONG).show();
                     }
                 });
+    }
+
+    //draw line between the points
+    public void DrawDirection(LatLng sPoint, LatLng ePoint){
+        PolylineOptions polylineOptions = new PolylineOptions()
+                .add(sPoint,ePoint).
+                color(Color.RED)
+                .width(5);
+        mMap.addPolyline(polylineOptions);
     }
 
     // when permissions accepted
@@ -324,8 +332,21 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                             // make my new location point is start point
                             startPoint = latLng;
                             //call calculate distance and get direction methods
-                            CalculationByDistance(startPoint, endPoint);
-                            GetDirection(startPoint, endPoint);
+                             if (btnClickFlag){
+                                 // clear map to remove the old line and add another one
+                                 mMap.clear();
+                                 //re add marker in end point
+                                 MarkerOptions mark = new MarkerOptions().position(endPoint).title("Goal point");
+                                 //add the marker to the map
+                                 mMap.addMarker(mark);
+                                 //calculate new distance
+                                CalculationByDistance(startPoint, endPoint);
+                                //draw new line
+                                DrawDirection(startPoint, endPoint);
+                            }else{
+                                 tv_yourLocation.setText(getString(R.string.yourLocation) + startPoint.latitude
+                                         + "," + startPoint.longitude);
+                             }
                             Log.e("LocationChanged", latLng.toString());
                         }
                         // check if flag equal to true this mean it's first time to call get location method
