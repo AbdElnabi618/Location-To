@@ -183,18 +183,21 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 if (ContextCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED &&
                         ContextCompat.checkSelfPermission(this, permissions[1]) == PackageManager.PERMISSION_GRANTED
                         ) {
-                    if (mapFragment != null) {
-                        mapFragment.getMapAsync(this);
-                    } else {
-                        Toast.makeText(this, "Error 15 : map async not found", Toast.LENGTH_SHORT).show();
-                    }
-                    // check gps is enable or not
-                    GPSIsEnabled();
-                    // create google api client
-                    CreateGoogleApiClient();
-                    // set location enable to get in map
-                    if (mMap != null)
-                        mMap.setMyLocationEnabled(true);
+//                    if (mapFragment != null) {
+//                        mapFragment.getMapAsync(this);
+//                    } else {
+//                        Toast.makeText(this, "Error 15 : map async not found", Toast.LENGTH_SHORT).show();
+//                    }
+//                    // check gps is enable or not
+//                    GPSIsEnabled();
+//                    // create google api client
+//                    CreateGoogleApiClient();
+//                    // set location enable to get in map
+//                    if (mMap != null)
+//                        mMap.setMyLocationEnabled(true);
+                    Intent i = new Intent(MapActivity.this, MapActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(i);
                 } else {
                     Toast.makeText(this, "the app will will not work if don\'t accept the permissions", Toast.LENGTH_LONG).show();
                 }
@@ -288,12 +291,17 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                             // open setting to open GPS
                             Intent gpsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                             startActivity(gpsIntent);
-                            if(mMap!= null && startPoint != null)
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startPoint,16));
                         }
                     }).create().show();
 
         }
+    }
+
+    @Override
+    protected void onRestart() {
+        if(mMap!= null && startPoint != null)
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(startPoint,16));
+        super.onRestart();
     }
 
     // when client connect to server
