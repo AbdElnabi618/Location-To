@@ -8,28 +8,21 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.solver.widgets.Snapshot;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.SeekBar;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
-import com.akexorcist.googledirection.constant.AvoidType;
 import com.akexorcist.googledirection.model.Direction;
 import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.util.DirectionConverter;
@@ -43,20 +36,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
-import org.json.JSONObject;
-
-import java.io.IOException;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.OnConnectionFailedListener,GoogleApiClient.ConnectionCallbacks {
@@ -65,13 +51,15 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     private GoogleMap mMap;
     private GoogleApiClient apiClient;
     private boolean flag,btnClickFlag;
-    LocationRequest locationRequest;
+    private LocationRequest locationRequest;
     private SupportMapFragment mapFragment;
+    private TextView tv_yourLocation, tv_goalPoint, tv_distance;
+    private Button getDistance;
+    private LatLng startPoint, endPoint;
+    private FirebaseDatabase firebaseDatabase;
 
-    TextView tv_yourLocation, tv_goalPoint, tv_distance;
-    Button getDistance;
-    LatLng startPoint, endPoint;
 
+    DatabaseReference databaseReference, currentPointReference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -80,6 +68,11 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         flag = true;
         btnClickFlag =false;
 
+        firebaseDatabase = FirebaseDatabase.getInstance();
+
+        databaseReference = firebaseDatabase.getReference("points");
+        currentPointReference = firebaseDatabase.getReference("Current point");
+
         tv_distance = findViewById(R.id.tv_distance);
         tv_goalPoint = findViewById(R.id.tv_nextLocation);
         tv_yourLocation = findViewById(R.id.tv_yourLocation);
@@ -87,6 +80,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
         // initialization end point
         endPoint = new LatLng(0.0, 0.0);
+        startPoint = new LatLng(0.0, 0.0);
 
         // set map fragment
         mapFragment = (SupportMapFragment) getSupportFragmentManager().
@@ -139,8 +133,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     }
 
     //get direction method
-    public void GetDirection(LatLng sPoint, LatLng ePoint) {
-        GoogleDirection.withServerKey(getString(R.string.server_key))
+    public void GetDirection(LatLng sPoint, LatLng ePoint, String serverKey) {
+        GoogleDirection.withServerKey(serverKey)
                 .from(sPoint)
                 .to(ePoint)
                 .execute(new DirectionCallback() {
@@ -189,20 +183,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
         switch (requestCode) {
             case 18: {
                 if (ContextCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, permissions[1]) == PackageManager.PERMISSION_GRANTED
-                        ) {
-//                    if (mapFragment != null) {
-//                        mapFragment.getMapAsync(this);
-//                    } else {
-//                        Toast.makeText(this, "Error 15 : map async not found", Toast.LENGTH_SHORT).show();
-//                    }
-//                    // check gps is enable or not
-//                    GPSIsEnabled();
-//                    // create google api client
-//                    CreateGoogleApiClient();
-//                    // set location enable to get in map
-//                    if (mMap != null)
-//                        mMap.setMyLocationEnabled(true);
+                        ContextCompat.checkSelfPermission(this, permissions[1]) == PackageManager.PERMISSION_GRANTED) {
                     Intent i = new Intent(MapActivity.this, MapActivity.class);
                     i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     startActivity(i);
@@ -327,8 +308,13 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     public void onLocationChanged(Location location) {
                         // get mt new location point
                         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        Toast.makeText(MapActivity.this, "Location already  \n lat : " + (location.getLatitude() -startPoint.latitude)
+                                +"\nlng :"+( location.getLongitude() - startPoint.longitude) , Toast.LENGTH_SHORT).show();
+
                         // check if location changed
                         if (!latLng.equals(startPoint)) {
+                            Point point = new Point(latLng);
+                            SendCurrentLocat(point);
                             // make my new location point is start point
                             startPoint = latLng;
                             //call calculate distance and get direction methods
@@ -343,6 +329,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                                 CalculationByDistance(startPoint, endPoint);
                                 //draw new line
                                 DrawDirection(startPoint, endPoint);
+
                             }else{
                                  tv_yourLocation.setText(getString(R.string.yourLocation) + startPoint.latitude
                                          + "," + startPoint.longitude);
@@ -384,7 +371,24 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast.makeText(this, "Connection Failure", Toast.LENGTH_SHORT).show();
+    }
 
+    public void SendCurrentLocat(Point point){
+        currentPointReference.setValue(point)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.e("sendPointTag", "onSuccess: point add" );
+                }
+            })
+            .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(MapActivity.this, "Error in add point: " +
+                            e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
     }
 
 }
