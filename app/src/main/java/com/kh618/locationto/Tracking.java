@@ -17,7 +17,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class Tracking extends AppCompatActivity implements OnMapReadyCallback {
+public class Tracking extends AppCompatActivity implements OnMapReadyCallback ,ValueEventListener{
 
     private SupportMapFragment mapFragment;
     private GoogleMap mMap;
@@ -43,21 +43,7 @@ public class Tracking extends AppCompatActivity implements OnMapReadyCallback {
         database = FirebaseDatabase.getInstance();
         currentPointRefrence = database.getReference("Current point");
 
-        currentPointRefrence.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                currentUserPoint = dataSnapshot.getValue(Point.class);
-
-                if (mapFragment != null && currentUserPoint != null) {
-                    ZoomAndMarkLocation();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("Cancelled:", "event cancelled, Error:" + databaseError.getMessage());
-            }
-        });
+        currentPointRefrence.addValueEventListener(this);
 
         if (mapFragment != null) {
             mapFragment.getMapAsync(Tracking.this);
@@ -78,4 +64,17 @@ public class Tracking extends AppCompatActivity implements OnMapReadyCallback {
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserPoint.toLatLng(), ZOOM_DEGREE));
     }
 
+    @Override
+    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+        currentUserPoint = dataSnapshot.getValue(Point.class);
+
+        if (mapFragment != null && currentUserPoint != null) {
+            ZoomAndMarkLocation();
+        }
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError databaseError) {
+        Log.e("Cancelled:", "event cancelled, Error:" + databaseError.getMessage());
+    }
 }
