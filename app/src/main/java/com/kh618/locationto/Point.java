@@ -3,7 +3,11 @@ package com.kh618.locationto;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
-
+/*
+ * This class created to used with firebase a custom data type
+ * to make easy send and received data from firebase and have a
+ * method called toLatLng that's return LatLng object from our class
+ */
 public class Point {
 
     private Double x ;
