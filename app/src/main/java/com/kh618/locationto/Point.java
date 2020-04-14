@@ -14,11 +14,17 @@ public class Point {
     private Double y ;
 
     public Point() {
+        this.x = 0.0;
+        this.y= 0.0;
     }
 
     public Point(Double x, Double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Point(LatLng ll){
+        SetPointFromLatLang(ll);
     }
 
     public Double getX() {
@@ -32,12 +38,8 @@ public class Point {
     public Double getY() {
         return y;
     }
-
     public void setY(Double y) {
         this.y = y;
-    }
-    public Point(LatLng ll){
-        SetPointFromLatLang(ll);
     }
 
     Point SetPointFromLatLang(LatLng ll){

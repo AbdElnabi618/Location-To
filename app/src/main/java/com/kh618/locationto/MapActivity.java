@@ -180,17 +180,14 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
     // when permissions accepted
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case 18: {
-                if (ContextCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this, permissions[1]) == PackageManager.PERMISSION_GRANTED) {
-                    Intent i = new Intent(MapActivity.this, MapActivity.class);
-                    i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    startActivity(i);
-                } else {
-                    Toast.makeText(this, "the app will will not work if don\'t accept the permissions", Toast.LENGTH_LONG).show();
-                }
-                break;
+        if (requestCode == 18) {
+            if (ContextCompat.checkSelfPermission(this, permissions[0]) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, permissions[1]) == PackageManager.PERMISSION_GRANTED) {
+                Intent i = new Intent(MapActivity.this, MapActivity.class);
+                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+            } else {
+                Toast.makeText(this, "the app will will not work if don\'t accept the permissions", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -204,7 +201,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
 
         CreateGoogleApiClient();
         mMap.setMyLocationEnabled(true);
-
+        mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -218,7 +215,7 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
                 // add the mark to end point
                 mMap.addMarker(mark);
-                Log.e("LocationChanged : lat an lang end point ", latLng.toString());
+                Log.e("LocationChanged : ","lat an lang end point "+ latLng.toString());
             }
         });
 
@@ -308,8 +305,6 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                     public void onLocationChanged(Location location) {
                         // get mt new location point
                         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        Toast.makeText(MapActivity.this, "Location already  \n lat : " + (location.getLatitude() -startPoint.latitude)
-                                +"\nlng :"+( location.getLongitude() - startPoint.longitude) , Toast.LENGTH_SHORT).show();
 
                         // check if location changed
                         if (!latLng.equals(startPoint)) {
@@ -389,6 +384,8 @@ public class MapActivity extends FragmentActivity implements OnMapReadyCallback,
                             e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
+
+        databaseReference.child(databaseReference.push().getKey()).setValue(point);
     }
 
 }

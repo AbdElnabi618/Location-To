@@ -1,5 +1,6 @@
 package com.kh618.locationto;
 
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,22 +18,29 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Tracking extends AppCompatActivity implements OnMapReadyCallback ,ValueEventListener{
 
     private SupportMapFragment mapFragment;
     private GoogleMap mMap;
-    private final int ZOOM_DEGREE = 17;
+    private final int ZOOM_DEGREE = 20;
     private Point currentUserPoint;
     private MarkerOptions markerOptions;
     private DatabaseReference currentPointRefrence;
     private FirebaseDatabase database;
     private Marker mark;
+    private List<Point> points;
+    private int position;
 
+    DatabaseReference allPointsReference;
+    private static final String TAG = "Tracking";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracking);
-
+        points = new ArrayList<>();
         mapFragment = (SupportMapFragment) getSupportFragmentManager().
                 findFragmentById(R.id.tracking_map);
 
@@ -42,8 +50,26 @@ public class Tracking extends AppCompatActivity implements OnMapReadyCallback ,V
 
         database = FirebaseDatabase.getInstance();
         currentPointRefrence = database.getReference("Current point");
+        allPointsReference = database.getReference("points");
 
-        currentPointRefrence.addValueEventListener(this);
+
+        allPointsReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                Iterable<DataSnapshot> children = dataSnapshot.getChildren();
+                for (DataSnapshot data:children) {
+                    Point cure = data.getValue(Point.class);
+                    points.add(cure);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
         if (mapFragment != null) {
             mapFragment.getMapAsync(Tracking.this);
@@ -55,11 +81,27 @@ public class Tracking extends AppCompatActivity implements OnMapReadyCallback ,V
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.getUiSettings().setZoomControlsEnabled(true);
         mark = mMap.addMarker(markerOptions);
-        ZoomAndMarkLocation();
+        position =0;
+        /*for(Point point : points) {
+            ZoomAndMarkLocation(point);
+        }*/
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ZoomAndMarkLocation(points.get(position));
+                ++position;
+                if(position >= points.size()){
+                    Toast.makeText(Tracking.this, "User is stop here", Toast.LENGTH_SHORT).show();
+                }else{
+                    new Handler().postDelayed(this, 1000);
+                }
+            }
+        }, 1500);
     }
 
-    public void ZoomAndMarkLocation() {
+    public void ZoomAndMarkLocation(Point currentUserPoint) {
         mark.setPosition(currentUserPoint.toLatLng());
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentUserPoint.toLatLng(), ZOOM_DEGREE));
     }
@@ -69,7 +111,7 @@ public class Tracking extends AppCompatActivity implements OnMapReadyCallback ,V
         currentUserPoint = dataSnapshot.getValue(Point.class);
 
         if (mapFragment != null && currentUserPoint != null) {
-            ZoomAndMarkLocation();
+           // ZoomAndMarkLocation(currentUserPoint);
         }
     }
 
