@@ -1,6 +1,6 @@
 package com.kh618.locationto;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
 /*
